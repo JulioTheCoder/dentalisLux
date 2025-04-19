@@ -1,5 +1,4 @@
 import './globals.css'
-
 export const metadata = {
   title: 'DentalisLux',
   description: 'Created with v0',
