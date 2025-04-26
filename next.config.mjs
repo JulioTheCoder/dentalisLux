@@ -17,8 +17,8 @@ const nextConfig = {
   images: {
     unoptimized: true, // Desactiva la optimización de imágenes (necesario para GitHub Pages)
   },
-  basePath: "/<nombre-del-repositorio>", // Reemplaza con el nombre de tu repositorio
-  assetPrefix: "/<nombre-del-repositorio>/", // Reemplaza con el nombre de tu repositorio
+  basePath: "/dentalisLuz", // Reemplaza con el nombre de tu repositorio
+  assetPrefix: "/dentalisLux/", // Reemplaza con el nombre de tu repositorio
   eslint: {
     ignoreDuringBuilds: true,
   },
