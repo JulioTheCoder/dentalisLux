@@ -514,7 +514,7 @@ export default function Home() {
                 <span className="text-xl font-bold">Dentalis Lux</span>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
-                Comprometidos con su salud bucal y bienestar desde hace más de 15 años.
+                Comprometidos con su salud bucal y bienestar.
               </p>
             </div>
             {/* Modificar los enlaces del footer para que también usen la función handleNavLinkClick */}
