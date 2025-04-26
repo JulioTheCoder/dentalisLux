@@ -13,14 +13,17 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "export", // Exporta el proyecto como un sitio estático
+  images: {
+    unoptimized: true, // Desactiva la optimización de imágenes (necesario para GitHub Pages)
+  },
+  basePath: "/<nombre-del-repositorio>", // Reemplaza con el nombre de tu repositorio
+  assetPrefix: "/<nombre-del-repositorio>/", // Reemplaza con el nombre de tu repositorio
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
   },
   experimental: {
     webpackBuildWorker: true,
