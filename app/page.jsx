@@ -7,12 +7,55 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, Clock, MapPin, Phone, Mail, CheckCircle, MessageCircle } from "lucide-react"
 import { AuthButtons } from "./components/auth-buttons"
 import { AppointmentForm } from "./components/appointment-form"
-import { useState } from "react"
+import { DebugAuth } from "./components/debug-auth"
+import { useState, useEffect } from "react"
+import { use } from "react"
+import { supabase } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 // Modificar la función Home para incluir la funcionalidad de desplazamiento suave
 export default function Home() {
+  const router = useRouter();
   // Agregar un estado para controlar la visibilidad del menú móvil
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+  // Suscribirse a los cambios de autenticación
+  const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log("Tuki");
+    console.log(event, session);
+
+    if (session?.user) {
+      console.log("Usuario ha iniciado sesión:", session.user.id);
+      const { data: userData, error: userError } = await supabase
+        .from("usuario")
+        .select("rol")
+        .eq("id", session.user.id)
+        .single();
+
+      
+      // Aquí puedes redirigir según el rol si lo necesitas
+      if (userData.rol === "admin") {
+        router.push("/dashboard/administrador");
+      } else if (userData.rol === "empleado") {
+        router.push("/dashboard/empleados");
+      } else if (userData.rol === "usuario") {
+        router.push("/dashboard/cliente");
+      }else {
+        console.error("Rol de usuario no reconocido:", userData.rol);
+        // Aquí podrías manejar el caso de un rol no reconocido, por ejemplo, redirigir a una página de error
+      }
+    
+    }
+    
+  });
+
+  // Limpiar la suscripción al desmontar el componente
+  return () => {
+    authListener?.subscription.unsubscribe();
+  };
+}, []);
+    
 
   // Función para manejar el clic en los enlaces de navegación
   const handleNavLinkClick = (e, sectionId) => {
@@ -494,6 +537,17 @@ export default function Home() {
                 </form>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Debug Section - Temporal */}
+        <section className="py-16 bg-muted/30">
+          <div className="container">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">Debug de Autenticación</h2>
+              <p className="text-muted-foreground">Información temporal para debugging</p>
+            </div>
+            <DebugAuth />
           </div>
         </section>
       </main>

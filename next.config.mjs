@@ -13,12 +13,12 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export", // Exporta el proyecto como un sitio estático
+  //output: "export", // Exporta el proyecto como un sitio estático
   images: {
     unoptimized: true, // Desactiva la optimización de imágenes (necesario para GitHub Pages)
   },
-  basePath: "/dentalisLuz", // Reemplaza con el nombre de tu repositorio
-  assetPrefix: "/dentalisLux/", // Reemplaza con el nombre de tu repositorio
+  basePath: "", // Reemplaza con el nombre de tu repositorio
+  assetPrefix: "", // Reemplaza con el nombre de tu repositorio
   eslint: {
     ignoreDuringBuilds: true,
   },

@@ -41,9 +41,13 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase/client"
+import { handleClientScriptLoad } from "next/script"
 
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState("overview");
+  const router = useRouter();
 
   // Datos de ejemplo para el administrador
   const admin = {
@@ -186,6 +190,11 @@ export default function AdminDashboardPage() {
         return <Badge>{status}</Badge>
     }
   }
+  const handleLogout = async () => {
+  await supabase.auth.signOut();
+  console.log("Sesión cerrada");
+  router.push('/');
+};
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -261,8 +270,8 @@ export default function AdminDashboardPage() {
                   <Settings className="mr-2 h-4 w-4" />
                   Configuración
                 </Button>
-                <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-500">
-                  <LogOut className="mr-2 h-4 w-4" />
+                <Button onClick={handleLogout} variant="ghost" className="w-full justify-start text-red-500 hover:text-red-500">
+                  <LogOut  className="mr-2 h-4 w-4" />
                   Cerrar Sesión
                 </Button>
               </div>
