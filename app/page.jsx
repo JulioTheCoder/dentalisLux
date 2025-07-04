@@ -38,10 +38,10 @@ export default function Home() {
       if (userData.rol === "admin") {
         router.push("/dashboard/administrador");
       } else if (userData.rol === "empleado") {
-        router.push("/dashboard/empleados");
+        router.push("/dashboard/empleado");
       } else if (userData.rol === "usuario") {
         router.push("/dashboard/cliente");
-      }else {
+      } else {
         console.error("Rol de usuario no reconocido:", userData.rol);
         // Aquí podrías manejar el caso de un rol no reconocido, por ejemplo, redirigir a una página de error
       }
@@ -203,7 +203,7 @@ export default function Home() {
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
               Sonrisas saludables para toda la familia
             </h1>
-            <p className="mt-4 max-w-[700px] text-lg text-white/90">
+            <p className="mt-4 max-w-[700px] text-lg text-withe">
               Ofrecemos atención dental de calidad con tecnología avanzada y un equipo profesional comprometido con su
               bienestar.
             </p>

@@ -2,12 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, AlertTriangle, Home } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Shield, AlertTriangle } from "lucide-react"
 
 export function AccessDenied({ userRole, attemptedRoute }) {
-  const router = useRouter()
-
   const getRoleName = (role) => {
     switch (role) {
       case 'admin': return 'Administrador'
@@ -24,6 +21,13 @@ export function AccessDenied({ userRole, attemptedRoute }) {
       case 'usuario': return '/dashboard/cliente'
       default: return '/'
     }
+  }
+
+  const handleGoToDashboard = () => {
+    const dashboardRoute = getDashboardRoute(userRole)
+    console.log('🔄 Redirigiendo a dashboard:', dashboardRoute)
+    // Forzar recarga completa de la página
+    window.location.href = dashboardRoute
   }
 
   return (
@@ -52,18 +56,10 @@ export function AccessDenied({ userRole, attemptedRoute }) {
           
           <div className="flex flex-col space-y-2">
             <Button 
-              onClick={() => router.push(getDashboardRoute(userRole))}
+              onClick={handleGoToDashboard}
               className="w-full"
             >
               Ir a mi Dashboard
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => router.push('/')}
-              className="w-full"
-            >
-              <Home className="mr-2 h-4 w-4" />
-              Volver al Inicio
             </Button>
           </div>
         </CardContent>

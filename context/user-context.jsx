@@ -8,6 +8,7 @@ const UserContext = createContext();
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     // Obtener sesión inicial
@@ -77,7 +78,9 @@ export function UserProvider({ children }) {
             });
           }
         } else if (event === 'SIGNED_OUT') {
+          console.log('🔄 Usuario cerró sesión, limpiando estado');
           setUser(null);
+          setIsSigningOut(false);
         }
       }
     );
@@ -86,21 +89,49 @@ export function UserProvider({ children }) {
   }, []);
 
   const signOut = async () => {
+    if (isSigningOut) {
+      console.log('⚠️ Logout ya en progreso, ignorando llamada adicional');
+      return;
+    }
+
     try {
+      console.log('🚪 Iniciando proceso de logout...');
+      setIsSigningOut(true);
+      
+      // Limpiar el estado del usuario inmediatamente
+      setUser(null);
+      
+      // Cerrar sesión en Supabase
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
-        console.error('Error al cerrar sesión:', error);
-      } else {
-        setUser(null);
+        console.error('❌ Error al cerrar sesión en Supabase:', error);
+        // Aún así, intentar redirigir
         window.location.href = '/';
+        return;
       }
+      
+      console.log('✅ Logout exitoso');
+      
+      // Usar setTimeout para asegurar que el estado se actualice antes de redirigir
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+      
     } catch (error) {
-      console.error('Error inesperado al cerrar sesión:', error);
+      console.error('❌ Error inesperado al cerrar sesión:', error);
+      // En caso de error, forzar la redirección
+      window.location.href = '/';
+    } finally {
+      // Resetear el estado de signing out después de un tiempo
+      setTimeout(() => {
+        setIsSigningOut(false);
+      }, 2000);
     }
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, loading, signOut }}>
+    <UserContext.Provider value={{ user, setUser, loading, signOut, isSigningOut }}>
       {children}
     </UserContext.Provider>
   );

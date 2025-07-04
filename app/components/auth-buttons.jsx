@@ -21,15 +21,17 @@ import { useUser } from "@/context/user-context";
 
 export function AuthButtons() {
   const router = useRouter();
-  const { user, signOut } = useUser();
+  const { user, signOut, isSigningOut } = useUser();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Función para abrir el modal
   const handleOpenDialog = () => {
     console.log("Abriendo modal de login...");
     setError("");
+    setSuccessMessage("");
     setIsDialogOpen(true);
   };
 
@@ -81,6 +83,7 @@ export function AuthButtons() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setSuccessMessage("");
     
     const email = e.target.elements["email-register"].value;
     const password = e.target.elements["password-register"].value;
@@ -90,41 +93,79 @@ export function AuthButtons() {
     const numero_identificacion = e.target.elements["id-number-register"].value;
 
     try {
+      console.log("🚀 Iniciando proceso de registro...");
+      console.log("📧 Email:", email);
+      console.log("👤 Nombre:", name);
+      
+      // Verificar si el email ya existe en la tabla usuario
+      const { data: existingUser, error: checkError } = await supabase
+        .from('usuario')
+        .select('id')
+        .eq('email', email)
+        .single();
+      
+      if (existingUser) {
+        setError("Este email ya está registrado");
+        return;
+      }
+
+      // Crear el usuario en Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password
       });
       
       if (error) {
-        console.error("Error en registro:", error);
+        console.error("❌ Error en registro de autenticación:", error);
         setError(error.message);
         return;
       }
       
-      console.log("Datos de registro de autenticación:", data);
+      console.log("✅ Usuario creado en Auth:", data.user?.id);
 
       if (data?.user) {
+        // Insertar datos adicionales en la tabla usuario
         const { error: userError } = await supabase.from("usuario").insert({
           id: data.user.id,
-          nombre: name,
-          telefono: phone,
+          name: name,
+          phone: phone,
           tipo_identificacion: tipo_identificacion,
           numero_identificacion: numero_identificacion,
           rol: "usuario"
         });
         
         if (userError) {
-          console.error("Error al crear usuario:", userError);
-          setError("Error al crear el perfil de usuario");
+          console.error("❌ Error al crear perfil de usuario:", userError);
+          console.error("❌ Detalles del error:", userError.message, userError.details);
+          
+          // Si falla la inserción, intentar eliminar el usuario de Auth
+          try {
+            await supabase.auth.admin.deleteUser(data.user.id);
+          } catch (deleteError) {
+            console.error("❌ Error al eliminar usuario de Auth:", deleteError);
+          }
+          
+          setError(`Error al crear el perfil: ${userError.message}`);
           return;
         }
         
-        console.log("Usuario registrado exitosamente");
-        setIsDialogOpen(false);
+        console.log("✅ Perfil de usuario creado exitosamente");
+        
+        // Mostrar mensaje de éxito
+        setSuccessMessage("Usuario registrado exitosamente. Por favor, verifica tu email para confirmar tu cuenta.");
+        
+        // Cerrar el modal después de un breve delay
+        setTimeout(() => {
+          setIsDialogOpen(false);
+          setSuccessMessage("");
+        }, 3000);
+        
+      } else {
+        setError("No se pudo crear el usuario");
       }
     } catch (error) {
-      console.error("Error inesperado en registro:", error);
-      setError("Error inesperado al registrarse");
+      console.error("❌ Error inesperado en registro:", error);
+      setError("Error inesperado al registrarse. Por favor, intenta de nuevo.");
     } finally {
       setIsLoading(false);
     }
@@ -140,10 +181,11 @@ export function AuthButtons() {
         <Button 
           variant="outline" 
           onClick={signOut}
+          disabled={isSigningOut}
           className="flex items-center gap-2"
         >
           <User className="h-4 w-4" />
-          <span>Cerrar Sesión</span>
+          <span>{isSigningOut ? "Cerrando..." : "Cerrar Sesión"}</span>
         </Button>
       </div>
     );
@@ -171,6 +213,12 @@ export function AuthButtons() {
           {error && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          
+          {successMessage && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-600">{successMessage}</p>
             </div>
           )}
           

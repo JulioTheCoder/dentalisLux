@@ -28,17 +28,25 @@ import Image from "next/image"
 export default function DashboardNavbar() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, signOut } = useUser()
+  const { user, signOut, isSigningOut } = useUser()
 
   console.log("DashboardNavbar renderizado - pathname:", pathname)
   console.log("DashboardNavbar - usuario:", user)
+  console.log("DashboardNavbar - isSigningOut:", isSigningOut)
 
   const handleLogout = async () => {
+    if (isSigningOut) {
+      console.log("⚠️ Logout ya en progreso, ignorando clic adicional")
+      return
+    }
+
     try {
       console.log("Iniciando proceso de logout...")
       await signOut()
     } catch (error) {
       console.error("Error inesperado durante el logout:", error)
+      // En caso de error, forzar la redirección
+      window.location.href = '/'
     }
   }
 
@@ -191,9 +199,13 @@ export default function DashboardNavbar() {
               })}
               
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+              <DropdownMenuItem 
+                onClick={handleLogout} 
+                className="text-red-600 focus:text-red-600"
+                disabled={isSigningOut}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Cerrar Sesión</span>
+                <span>{isSigningOut ? "Cerrando sesión..." : "Cerrar Sesión"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

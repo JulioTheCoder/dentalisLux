@@ -13,7 +13,7 @@ export default function DashboardPage() {
     if (user.role === "cliente") {
       router.push("/dashboard/cliente"); // Ruta para el dashboard de clientes
     } else if (user.role === "empleado") {
-      router.push("/dashboard/empleados"); // Ruta para el dashboard de empleados
+      router.push("/dashboard/empleado"); // Ruta para el dashboard de empleados
     } else if (user.role === "administrador") {
       router.push("/dashboard/admin"); // Ruta para el dashboard de administradores
     } else {
