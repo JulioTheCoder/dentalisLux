@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -16,6 +16,8 @@ import {
   CheckCircle,
   XCircle,
   ChevronRight,
+  X,
+  Plus,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -32,9 +34,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { getServices, getDoctors, createAppointment } from "@/lib/supabase/appointments"
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Estado del formulario simplificado
+  const [formData, setFormData] = useState({
+    service: "",
+    doctor: "auto", // Por defecto, asignación automática
+    reason: "",
+    notes: ""
+  })
 
   // Datos de ejemplo para el usuario
   const user = {
@@ -44,6 +69,115 @@ export default function DashboardPage() {
     nextAppointment: "28 de Junio, 2023 - 10:30 AM",
     doctor: "Dr. Carlos Sánchez",
     service: "Limpieza Dental",
+  }
+
+  // Estado para datos dinámicos
+  const [services, setServices] = useState([])
+  const [doctors, setDoctors] = useState([])
+
+  // Cargar servicios y doctores al montar el componente
+  useEffect(() => {
+    loadServicesAndDoctors()
+  }, [])
+
+  const loadServicesAndDoctors = async () => {
+    try {
+      // Cargar servicios y doctores desde Supabase
+      const [servicesData, doctorsData] = await Promise.all([
+        getServices(),
+        getDoctors()
+      ])
+
+      setServices(servicesData)
+      setDoctors(doctorsData)
+    } catch (error) {
+      console.error("Error cargando servicios y doctores:", error)
+      // Fallback a datos de ejemplo si hay error
+      const mockServices = [
+        { servicio_id: 1, nombre: "Limpieza Dental", descripcion: "Limpieza profesional", costo: 80, duracion: 45 },
+        { servicio_id: 2, nombre: "Ortodoncia", descripcion: "Consulta de ortodoncia", costo: 150, duracion: 60 },
+        { servicio_id: 3, nombre: "Implantes Dentales", descripcion: "Colocación de implante", costo: 300, duracion: 90 },
+        { servicio_id: 4, nombre: "Blanqueamiento", descripcion: "Tratamiento blanqueador", costo: 120, duracion: 60 },
+        { servicio_id: 5, nombre: "Endodoncia", descripcion: "Tratamiento de conducto", costo: 200, duracion: 90 },
+        { servicio_id: 6, nombre: "Odontopediatría", descripcion: "Consulta pediátrica", costo: 100, duracion: 45 },
+        { servicio_id: 7, nombre: "Consulta General", descripcion: "Revisión general", costo: 50, duracion: 30 }
+      ]
+
+      const mockDoctors = [
+        { odontologo_id: 1, nombre: "Dr. Carlos Sánchez", especialidad: "Ortodoncista", email: "carlos@dentalcare.com" },
+        { odontologo_id: 2, nombre: "Dra. Laura Martínez", especialidad: "Cirujana Oral", email: "laura@dentalcare.com" },
+        { odontologo_id: 3, nombre: "Dra. Ana López", especialidad: "Odontopediatra", email: "ana@dentalcare.com" },
+        { odontologo_id: 4, nombre: "Dr. Juan Pérez", especialidad: "Endodoncista", email: "juan@dentalcare.com" }
+      ]
+
+      setServices(mockServices)
+      setDoctors(mockDoctors)
+    }
+  }
+
+  // Funciones para manejar el formulario
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    
+    try {
+      // Validar que todos los campos requeridos estén completos
+      if (!formData.service || !formData.reason) {
+        throw new Error("Por favor completa todos los campos requeridos")
+      }
+
+      // Crear objeto de cita simplificado - el sistema asignará fecha y hora
+      const appointmentData = {
+        usuario_id: user?.id, // ID del usuario autenticado
+        odontologo_id: formData.doctor && formData.doctor !== 'auto' ? parseInt(formData.doctor) : null, // Opcional
+        servicio_id: parseInt(formData.service),
+        estado: 'solicitada', // Nuevo estado para citas solicitadas
+        isUser: true,
+        user_phone: user?.phone || '',
+        notas: formData.notes || '',
+        motivo: formData.reason
+      }
+
+      console.log("Datos de la cita a enviar:", appointmentData)
+
+      // Crear la cita en Supabase - el sistema asignará fecha y hora automáticamente
+      const newAppointment = await createAppointment(appointmentData)
+      console.log("Cita creada:", newAppointment)
+      
+      // Limpiar formulario y cerrar modal
+      setFormData({
+        service: "",
+        doctor: "auto", // Por defecto, asignación automática
+        reason: "",
+        notes: ""
+      })
+      setIsModalOpen(false)
+      
+      // Aquí se podría mostrar un toast de éxito
+      alert("Solicitud de cita enviada exitosamente. Te contactaremos en las próximas 24 horas para confirmar la fecha y hora.")
+      
+    } catch (error) {
+      console.error("Error al solicitar cita:", error)
+      alert(error.message || "Error al enviar la solicitud. Inténtalo de nuevo.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      service: "",
+      doctor: "auto", // Por defecto, asignación automática
+      reason: "",
+      notes: ""
+    })
   }
 
   // Datos de ejemplo para el historial médico
@@ -420,7 +554,10 @@ export default function DashboardPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold tracking-tight">Historial de Citas</h1>
-                <Button>Agendar Nueva Cita</Button>
+                <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Solicitar Nueva Cita
+                </Button>
               </div>
 
               <Card>
@@ -547,6 +684,137 @@ export default function DashboardPage() {
           )}
         </main>
       </div>
+
+      {/* Modal para Solicitar Cita */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Solicitar Nueva Cita
+            </DialogTitle>
+            <DialogDescription>
+              Completa el formulario para solicitar una cita. Nuestro sistema de agendamiento inteligente asignará automáticamente la fecha y hora más conveniente según la disponibilidad de nuestros odontólogos.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Servicio */}
+            <div className="space-y-2">
+              <Label htmlFor="service">Servicio *</Label>
+              <Select value={formData.service} onValueChange={(value) => handleInputChange('service', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un servicio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.servicio_id} value={service.servicio_id.toString()}>
+                      <div className="flex justify-between items-center w-full">
+                        <span>{service.nombre}</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          {service.duracion} min • ${service.costo}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Doctor */}
+            <div className="space-y-2">
+              <Label htmlFor="doctor">Doctor Preferido (Opcional)</Label>
+              <Select value={formData.doctor} onValueChange={(value) => handleInputChange('doctor', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Deja en blanco para asignación automática" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground">Asignación automática</span>
+                      <span className="text-xs text-muted-foreground">El sistema elegirá el doctor más disponible</span>
+                    </div>
+                  </SelectItem>
+                  {doctors.map((doctor) => (
+                    <SelectItem key={doctor.odontologo_id} value={doctor.odontologo_id.toString()}>
+                      <div className="flex flex-col">
+                        <span>{doctor.nombre}</span>
+                        <span className="text-sm text-muted-foreground">{doctor.especialidad}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Motivo de la consulta */}
+            <div className="space-y-2">
+              <Label htmlFor="reason">Motivo de la Consulta *</Label>
+              <Textarea
+                id="reason"
+                placeholder="Describe brevemente el motivo de tu consulta..."
+                value={formData.reason}
+                onChange={(e) => handleInputChange('reason', e.target.value)}
+                rows={3}
+                required
+              />
+            </div>
+
+            {/* Notas adicionales */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notas Adicionales</Label>
+              <Textarea
+                id="notes"
+                placeholder="Información adicional que consideres importante..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            {/* Información adicional */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium">Proceso de Agendamiento</p>
+                  <p className="text-blue-700 mt-1">
+                    Una vez enviada tu solicitud, nuestro sistema analizará la disponibilidad de nuestros odontólogos 
+                    y te contactaremos en las próximas 24 horas para confirmar la fecha y hora asignada.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  resetForm()
+                  setIsModalOpen(false)
+                }}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Enviar Solicitud
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

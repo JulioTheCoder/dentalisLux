@@ -46,7 +46,7 @@ export default function DashboardNavbar() {
     } catch (error) {
       console.error("Error inesperado durante el logout:", error)
       // En caso de error, forzar la redirección
-      window.location.href = '/'
+      window.location.replace('/')
     }
   }
 
@@ -78,19 +78,14 @@ export default function DashboardNavbar() {
     
     switch (dashboardType) {
       case 'admin':
-        return [
-          { label: 'Nuevo Empleado', icon: Plus, onClick: () => console.log('Nuevo empleado') },
-          { label: 'Nuevo Servicio', icon: Plus, onClick: () => console.log('Nuevo servicio') }
-        ]
+        return []
       case 'empleado':
         return [
           { label: 'Nueva Cita', icon: Plus, onClick: () => console.log('Nueva cita') },
           { label: 'Nuevo Paciente', icon: Plus, onClick: () => console.log('Nuevo paciente') }
         ]
       case 'cliente':
-        return [
-          { label: 'Solicitar Cita', icon: Plus, onClick: () => console.log('Solicitar cita') }
-        ]
+        return []
       default:
         return []
     }
@@ -126,14 +121,14 @@ export default function DashboardNavbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className=" flex h-16 items-center justify-between px-4 mx-5">
         {/* Logo y título */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 ml-0">
           <Image
             src="/logo.png"
             alt="Logo"
-            width={32}
-            height={32}
+            width={48}
+            height={48}
             className="rounded-full"
           />
           <h1 className="text-xl font-semibold">{getDashboardTitle()}</h1>

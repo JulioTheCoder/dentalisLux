@@ -9,6 +9,7 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showLogoutLoading, setShowLogoutLoading] = useState(false);
 
   useEffect(() => {
     // Obtener sesión inicial
@@ -81,6 +82,12 @@ export function UserProvider({ children }) {
           console.log('🔄 Usuario cerró sesión, limpiando estado');
           setUser(null);
           setIsSigningOut(false);
+          setLoading(false);
+          setShowLogoutLoading(false);
+          
+          // Limpiar cualquier dato persistente
+          localStorage.removeItem('supabase.auth.token');
+          sessionStorage.clear();
         }
       }
     );
@@ -97,41 +104,52 @@ export function UserProvider({ children }) {
     try {
       console.log('🚪 Iniciando proceso de logout...');
       setIsSigningOut(true);
+      setShowLogoutLoading(true);
       
-      // Limpiar el estado del usuario inmediatamente
+      // Simular un pequeño delay para mostrar la pantalla de carga
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Limpiar el estado del usuario
       setUser(null);
+      
+      // Forzar una actualización del estado
+      setLoading(true);
       
       // Cerrar sesión en Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('❌ Error al cerrar sesión en Supabase:', error);
-        // Aún así, intentar redirigir
-        window.location.href = '/';
-        return;
+      } else {
+        console.log('✅ Logout exitoso en Supabase');
       }
       
-      console.log('✅ Logout exitoso');
+      // Limpiar cualquier dato en localStorage o sessionStorage
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
       
-      // Usar setTimeout para asegurar que el estado se actualice antes de redirigir
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Simular un pequeño delay adicional para una transición más suave
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Forzar la redirección
+      window.location.replace('/');
       
     } catch (error) {
       console.error('❌ Error inesperado al cerrar sesión:', error);
       // En caso de error, forzar la redirección
-      window.location.href = '/';
+      window.location.replace('/');
     } finally {
       // Resetear el estado de signing out después de un tiempo
       setTimeout(() => {
         setIsSigningOut(false);
+        setLoading(false);
+        setShowLogoutLoading(false);
       }, 2000);
     }
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, loading, signOut, isSigningOut }}>
+    <UserContext.Provider value={{ user, setUser, loading, signOut, isSigningOut, showLogoutLoading }}>
       {children}
     </UserContext.Provider>
   );
