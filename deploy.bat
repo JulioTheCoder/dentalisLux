@@ -10,15 +10,22 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-REM Verificar si npm está instalado
-npm --version >nul 2>&1
+REM Verificar si pnpm está instalado
+pnpm --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] npm no está instalado. Por favor instala npm
-    pause
-    exit /b 1
+    echo [INFO] pnpm no está instalado. Instalando...
+    call npm install -g pnpm
+    
+    if %errorlevel% neq 0 (
+        echo [ERROR] Error al instalar pnpm
+        pause
+        exit /b 1
+    )
+    
+    echo [SUCCESS] pnpm instalado correctamente
 )
 
-echo [SUCCESS] Node.js y npm están instalados
+echo [SUCCESS] Node.js y pnpm están instalados
 
 REM Verificar si el archivo .env.local existe
 if not exist ".env.local" (
@@ -49,7 +56,7 @@ if not exist ".env.local" (
 
 REM Instalar dependencias
 echo [INFO] Instalando dependencias...
-call npm install
+call pnpm install
 
 if %errorlevel% neq 0 (
     echo [ERROR] Error al instalar dependencias
@@ -63,7 +70,7 @@ REM Verificar si Vercel CLI está instalado
 vercel --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo [INFO] Vercel CLI no está instalado. Instalando...
-    call npm install -g vercel
+    call pnpm add -g vercel
     
     if %errorlevel% neq 0 (
         echo [ERROR] Error al instalar Vercel CLI
@@ -94,7 +101,7 @@ echo [SUCCESS] Autenticación en Vercel verificada
 
 REM Build del proyecto
 echo [INFO] Construyendo el proyecto...
-call npm run build
+call pnpm build
 
 if %errorlevel% neq 0 (
     echo [ERROR] Error en la construcción del proyecto

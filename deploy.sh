@@ -35,13 +35,20 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-# Verificar si npm está instalado
-if ! command -v npm &> /dev/null; then
-    print_error "npm no está instalado. Por favor instala npm"
-    exit 1
+# Verificar si pnpm está instalado
+if ! command -v pnpm &> /dev/null; then
+    print_status "pnpm no está instalado. Instalando..."
+    npm install -g pnpm
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error al instalar pnpm"
+        exit 1
+    fi
+    
+    print_success "pnpm instalado correctamente"
 fi
 
-print_success "Node.js y npm están instalados"
+print_success "Node.js y pnpm están instalados"
 
 # Verificar si el archivo .env.local existe
 if [ ! -f ".env.local" ]; then
@@ -71,7 +78,7 @@ fi
 
 # Instalar dependencias
 print_status "Instalando dependencias..."
-npm install
+pnpm install
 
 if [ $? -eq 0 ]; then
     print_success "Dependencias instaladas correctamente"
@@ -83,7 +90,7 @@ fi
 # Verificar si Vercel CLI está instalado
 if ! command -v vercel &> /dev/null; then
     print_status "Vercel CLI no está instalado. Instalando..."
-    npm install -g vercel
+    pnpm add -g vercel
     
     if [ $? -eq 0 ]; then
         print_success "Vercel CLI instalado correctamente"
@@ -112,7 +119,7 @@ print_success "Autenticación en Vercel verificada"
 
 # Build del proyecto
 print_status "Construyendo el proyecto..."
-npm run build
+pnpm build
 
 if [ $? -eq 0 ]; then
     print_success "Proyecto construido correctamente"
